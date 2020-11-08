@@ -1,0 +1,57 @@
+asp.net core ef core 在visual studio code下
+先前
+	安装 dotnet tool CLI
+		dotnet tool install --global dotnet-ef [--version x.x.x] 不加 --version 默认最新版 版本号要与dotnet sdk版本号一致(是否必须没测试过)
+		安装 dotnet-ef 工具后要将安装目录加入到PATH中
+			~/.bashrc or ~/.zshrc
+			export PATH=$PATH:/home/ly/.dotnet/tools
+		shell
+			source ~/.zshrc
+
+1. 添加数据库提供程序包
+	dotnet add package Microsoft.EntityFrameworkCore.Sqlite [--version x.x.x]
+
+2. 创建模型和模型的上下文类
+	namespace ApplicationName.Models
+		// Movie.cs
+		public class Movie {
+			...
+		}
+		
+		// RazorPagesMovieContext.cs
+		public class RazorPagesMovieContext : DbContext
+		{
+		    public RazorPagesMovieContext(DbContextOptions<RazorPagesMovieContext> options)
+		        : base(options)
+		    {
+
+		    }
+		    public DbSet<Movie> Movie { get; set; }
+		}
+	}
+
+3. Startup.cs添加模型上下文服务
+	services.AddDbContext<RazorPagesMovieContext>(options => 
+                options.UseSqlite(Configuration.GetConnectionString("RazorPagesMovieContext")));
+
+4. appsettings.json添加连接字符串配置
+	"ConnectionStrings": {
+    	"RazorPagesMovieContext": "Data Source=move.db"
+  	}
+  	
+5. 添加 Microsoft.EntityFrameworkCore.Design 包
+	dotnet add package Microsoft.EntityFrameworkCore.Design [--version x.x.x] 此包也可在步骤1 操作
+
+6. 数据迁移与生成
+	dotnet ef migrations add InitialCreate
+	dotnet ef database update // 将架构应用到数据库(生成数据库)
+	操作完成后根据连接字符串和生成数据库 使用sqllite的话会在当前项目目录下生成 move.db 数据库文件
+	
+	要重新生成migrations 需要先删除数据库
+		dotnet ef database drop
+		dotnet ef migrations remove
+		dotnet ef migrations add InitialCreate
+	或者重新迁移
+		dotnet ef migrations add newname
+		dotnet ef database update
+	
